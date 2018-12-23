@@ -1,3 +1,4 @@
+from typing import Sequence, Union, Callable
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -5,6 +6,8 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 import numpy as np
 
 torch.manual_seed(110)
+# typing, everything in Python is Object.
+tensor_activation = Callable[[torch.Tensor], torch.Tensor]
 
 
 class LSTMClassifier(nn.Module):
@@ -89,10 +92,67 @@ class LSTMCellClassifier(nn.Module):
         return F.log_softmax(fc_out, dim=-1)
 
 
-if __name__ == '__main__':
-    # unit test
-    sentence = torch.tensor([[1, 2, 3],
-                             [1, 2, 0]], dtype=torch.int64)
-    m = LSTMClassifier('cpu', 5)
+class FeedForward(nn.Module):
+    """
+    This part of code is taken from AllenNLP Package, and simplified a bit.
+    Check it out.
+    https://github.com/allenai/allennlp/blob/master/allennlp/modules/feedforward.py
 
-    print(m(sentence, np.array([3, 2])))
+    TODO: add dropout support.
+    """
+
+    def __init__(self,
+                 input_dim: int,
+                 num_layers: int,
+                 hidden_dims: Union[int, Sequence[int]],
+                 activations: Union[tensor_activation, Sequence[tensor_activation]]) -> None:
+
+        super(FeedForward, self).__init__()
+
+        # All the checking.
+        if not isinstance(hidden_dims, list):
+            hidden_dims = [hidden_dims] * num_layers
+        if not isinstance(activations, list):
+            activations = [activations] * num_layers
+        if len(hidden_dims) != num_layers:
+            raise ValueError(f"len(hidden_dims) {len(hidden_dims)} != num_layers {num_layers}")
+        if len(activations) != num_layers:
+            raise ValueError(f"len(activations) {len(activations)} != num_layers {num_layers}")
+
+        # init
+        input_dims = [input_dim] + hidden_dims[:-1]
+        linear_layers = []
+        for layer_input_dim, layer_output_dim in zip(input_dims, hidden_dims):
+            linear_layers.append(nn.Linear(layer_input_dim, layer_output_dim))
+
+        self._linear_layers = nn.ModuleList(linear_layers)
+        self._input_dim = input_dim
+        self._output_dim = hidden_dims[-1]
+        self._activations = activations
+
+    def forward(self, inputs):
+        output = inputs
+        for layer, activation in zip(self._linear_layers, self._activations):
+            output = activation(layer(output))
+        return output
+
+    def get_input_dim(self):
+        return self._input_dim
+
+    def get_output_dim(self):
+        return self._output_dim
+
+
+if __name__ == '__main__':
+    # unit test for FeedForward Class
+    inputs = torch.randn((100, 256))
+    net = FeedForward(input_dim=256,
+                      num_layers=2,
+                      hidden_dims=[128, 16],
+                      activations=[nn.ReLU(), nn.ReLU()]
+                      )
+
+    print(net(inputs).shape)
+    for name, param in net.named_parameters():
+        print(name, param.shape)
+
