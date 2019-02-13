@@ -116,6 +116,27 @@ class PRMetric(Metric):
         return p, r
 
 
+class RankingAccuracy(Metric):
+    def __init__(self):
+        super(RankingAccuracy, self).__init__()
+        self._num_examples = 0
+        self._num_correct = 0
+
+    def reset(self):
+        self._num_examples = 0
+        self._num_correct = 0
+
+    def update(self, output):
+        y1, y2 = output
+        self._num_correct += torch.sum(y1 > y2).item()
+        self._num_examples += y1.shape[0]
+
+    def compute(self):
+        if self._num_examples == 0:
+            raise ZeroDivisionError('RankingAccuracy must have at least one example before it can be computed')
+        return self._num_correct / self._num_examples
+
+
 if __name__ == '__main__':
     # unit test
     pr = PRMetric(3)

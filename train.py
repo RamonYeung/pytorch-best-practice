@@ -12,9 +12,9 @@ import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
 # self-defined Modules
 from config import get_args
-from model import LSTMClassifier
+from model import LSTM4VarLenSeq
 from dataset import MetaQA
-from utils import set_seed, snapshot, show_params, l1_penalty
+from utils import set_seed, snapshot, show_params
 from metric import CategoricalAccuracy, PRMetric
 
 args = get_args()
@@ -32,7 +32,7 @@ dataset = MetaQA('1')
 train_data = TensorDataset(dataset.train_x, dataset.train_l, dataset.train_y)
 test_data = TensorDataset(dataset.test_x, dataset.test_l, dataset.test_y)
 # 3. Choose a model
-model = LSTMClassifier(train_device, len(dataset.vocab_q) + 1, args.embedding_size, args.hidden_size)
+model = LSTM4VarLenSeq(train_device, len(dataset.vocab_q) + 1, args.embedding_size, args.hidden_size)
 show_params(model)
 # 4. Choose a criterion
 # criterion = nn.CrossEntropyLoss()

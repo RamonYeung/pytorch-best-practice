@@ -88,4 +88,15 @@ def longest_substring(str1, str2):
     return str1[match.a: match.a + match.size] if match.size != 0 else ""
 
 
-print(normalize('ǖǘǚǜ'))
+def pad(sent, max_len):
+    """
+    syntax "[0] * int" only works properly for Python 3.5+
+    Note that in testing time, the length of a sentence
+    might exceed the pre-defined max_len (of training data).
+    """
+    length = len(sent)
+    return (sent + [0] * (max_len - length))[:max_len] if length < max_len else sent[:max_len]
+
+
+if __name__ == '__main__':
+    print(normalize('ǖǘǚǜ'))

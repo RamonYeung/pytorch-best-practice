@@ -39,19 +39,19 @@ class NLPDataset(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def load_data(self):
+    def load_data(self, mode):
         """
         Whatever messsssy data preprocessing pipeline.
 
         Usage:
         =================================================================================
-            self.train = load_data('train')
-            self.test = load_data('test')
-            self.dev = load_data('dev')
+            self.train = self.load_data(mode='train')
+            self.test = self.load_data(mode='test')
+            self.dev = self.load_data(mode='dev')
         =================================================================================
-        :return: data in clean text
+        :return: data (in clean text)
         """
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def build_vocab(self):
@@ -64,10 +64,10 @@ class NLPDataset(metaclass=ABCMeta):
         =================================================================================
         :return: id2word :list, word2id :dict
         """
-        pass
+        raise NotImplementedError
 
     @abstractmethod
-    def generate_tensors(self):
+    def generate_tensors(self, data):
         """
         Note that generate tensors on-the-fly will be much slower. Since NLP datasets
         are often small enough, we directly generate all the tensors and store them
@@ -112,7 +112,7 @@ class NLPDataset(metaclass=ABCMeta):
         ==================================================================================
         :return: tensors or tuple of tensors.
         """
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def report(self):
@@ -129,4 +129,4 @@ class NLPDataset(metaclass=ABCMeta):
         ==================================================================================
         :return: None
         """
-        pass
+        raise NotImplementedError
